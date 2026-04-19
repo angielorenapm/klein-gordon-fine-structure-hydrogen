@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Schrödinger vs KG vs KG corregida vs Dirac</title>
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121936;
+      --panel-2:#1a2246;
+      --text:#eef2ff;
+      --muted:#b8c1ec;
+      --accent:#7aa2ff;
+      --border:#2b356b;
+      --highlight:#fca5a5;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+    .wrap{
+      display:grid;
+      grid-template-columns:320px 1fr;
+      min-height:100vh;
+    }
+    .sidebar{
+      background:var(--panel);
+      padding:20px 18px;
+      border-right:1px solid var(--border);
+      overflow:auto;
+    }
+    .main{
+      padding:22px;
+      overflow:auto;
+    }
+    h1{
+      margin:0 0 10px;
+      font-size:28px;
+    }
+    h2{
+      margin:22px 0 12px;
+      font-size:18px;
+    }
+    h3{
+      margin:18px 0 10px;
+      font-size:15px;
+      color:var(--muted);
+      text-transform:uppercase;
+      letter-spacing:.04em;
+    }
+    p{
+      color:var(--muted);
+      line-height:1.45;
+    }
+    .control{
+      margin-bottom:14px;
+      padding:12px;
+      background:var(--panel-2);
+      border:1px solid var(--border);
+      border-radius:14px;
+    }
+    .control label{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:8px;
+      font-size:14px;
+    }
+    .value{
+      color:var(--accent);
+      font-weight:600;
+    }
+    input[type="range"], select{
+      width:100%;
+    }
+    select, input[type="range"]{
+      accent-color:var(--accent);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap:12px;
+      margin:12px 0 16px;
+    }
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:14px;
+      min-height:96px;
+    }
+    .card .label{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:8px;
+    }
+    .card .num{
+      font-size:20px;
+      font-weight:700;
+    }
+    .section{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:16px;
+      margin-bottom:16px;
+    }
+    #tableWrap{
+      overflow:auto;
+    }
+    table{
+      width:100%;
+      border-collapse:collapse;
+      font-size:14px;
+    }
+    th, td{
+      padding:10px 8px;
+      border-bottom:1px solid var(--border);
+      text-align:left;
+    }
+    th{
+      color:var(--muted);
+      font-weight:600;
+    }
+    .note{
+      font-size:13px;
+      color:var(--muted);
+      background:rgba(122,162,255,.08);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:12px;
+      margin-top:10px;
+    }
+    @media (max-width: 1100px){
+      .wrap{grid-template-columns:1fr}
+      .grid{grid-template-columns: repeat(2, minmax(140px, 1fr));}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <aside class="sidebar">
+      <h1>Comparación H–like</h1>
+      <p>
+        Comparación visual entre Schrödinger, Klein–Gordon, Klein–Gordon corregida con Thomas y Dirac
+        para un átomo hidrogenoide.
+      </p>
+
+      <h3>Parámetros físicos</h3>
+
+      <div class="control">
+        <label for="Z">Carga nuclear Z <span class="value" id="ZVal">1</span></label>
+        <input type="range" id="Z" min="1" max="20" step="1" value="1">
+      </div>
+
+      <div class="control">
+        <label for="nFocus">Nivel principal n <span class="value" id="nVal">2</span></label>
+        <input type="range" id="nFocus" min="1" max="5" step="1" value="2">
+      </div>
+
+      <div class="control">
+        <label for="lFocus">Número cuántico orbital l <span class="value" id="lVal">1</span></label>
+        <select id="lFocus"></select>
+      </div>
+
+      <div class="control">
+        <label for="jFocus">Número cuántico total j <span class="value" id="jVal">0.5</span></label>
+        <select id="jFocus"></select>
+      </div>
+
+      <div class="note">
+        Recomendación: usa <b>Z = 1</b>, <b>n = 2</b>, <b>l = 1</b> y compara
+        <b>j = 1/2</b> con <b>j = 3/2</b>.
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="section">
+        <h2>Estado seleccionado</h2>
+        <p id="stateText"></p>
+
+        <div class="grid">
+          <div class="card"><div class="label">Schrödinger</div><div class="num" id="mSch">—</div></div>
+          <div class="card"><div class="label">Klein–Gordon</div><div class="num" id="mKG">—</div></div>
+          <div class="card"><div class="label">KG corregida (Thomas)</div><div class="num" id="mKGC">—</div></div>
+          <div class="card"><div class="label">Dirac</div><div class="num" id="mDirac">—</div></div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:repeat(3,minmax(180px,1fr));max-width:900px;">
+          <div class="card"><div class="label">|Schr − Dirac|</div><div class="num" id="mErrSch">—</div></div>
+          <div class="card"><div class="label">|KG − Dirac|</div><div class="num" id="mErrKG">—</div></div>
+          <div class="card"><div class="label">|KG corr. − Dirac|</div><div class="num" id="mErrKGC">—</div></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Diagrama de niveles</h2>
+        <div id="levelsPlot" style="height:560px;"></div>
+      </div>
+
+      <div class="section">
+        <h2>Comparación de errores respecto a Dirac</h2>
+        <div id="errorPlot" style="height:430px;"></div>
+      </div>
+
+      <div class="section">
+        <h2>Tabla comparativa</h2>
+        <div id="tableWrap">
+          <table id="energyTable">
+            <thead>
+              <tr>
+                <th>Modelo</th>
+                <th>Estado</th>
+                <th>Energía (eV)</th>
+                <th>Error abs. vs Dirac (eV)</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Qué se corrigió</h2>
+        <p>
+          En esta versión se eliminó por completo “Schrödinger corregida / numérica aprox.” y se dejó solo
+          la comparación entre los cuatro modelos que tú necesitas. La energía “KG corregida” usa ahora
+          la corrección tipo Thomas con dependencia en <i>j</i>, mientras que KG sin corregir depende de <i>l</i>.
+          Así la gráfica final de errores sí refleja mejor que el desacuerdo grande aparece al comparar
+          Dirac con KG sin corregir.
+        </p>
+      </div>
+    </main>
+  </div>
+
+<script>
+const alpha = 1 / 137.035999084;
+const mc2_eV = 510998.95000;
+const rydberg_eV = 13.605693122994;
+
+const ZEl = document.getElementById("Z");
+const nEl = document.getElementById("nFocus");
+const lEl = document.getElementById("lFocus");
+const jEl = document.getElementById("jFocus");
+
+function allowedJValues(l){
+  if (l === 0) return [0.5];
+  return [l - 0.5, l + 0.5];
+}
+
+function stateLabel(n, l, j=null){
+  const letters = "spdfghijklmno";
+  const ell = l < letters.length ? letters[l] : `l=${l}`;
+  if (j === null) return `${n}${ell}`;
+  const num = Math.round(2*j);
+  return `${n}${ell}_${num}/2`;
+}
+
+// ---------------------------
+// Energía de Schrödinger
+// ---------------------------
+function schEnergyEV(Z, n){
+  return -rydberg_eV * Z * Z / (n * n);
+}
+
+// ---------------------------
+// Energía de Dirac (exacta)
+// ---------------------------
+function diracBindingEnergy(Z, n, j){
+  const za = Z * alpha;
+  const kappaTerm = j + 0.5;
+  const radicand = kappaTerm * kappaTerm - za * za;
+  if (radicand <= 0) return NaN;
+
+  const deltaJ = kappaTerm - Math.sqrt(radicand);
+  const N = n - deltaJ;
+  if (N <= 0) return NaN;
+
+  const Etotal = mc2_eV / Math.sqrt(1 + (za * za) / (N * N));
+  return Etotal - mc2_eV;
+}
+
+// ---------------------------
+// Klein–Gordon escalar
+// Depende de l, no de j
+// ---------------------------
+function kgBindingEnergy(Z, n, l){
+  const za = Z * alpha;
+  const ellTerm = l + 0.5;
+  const radicand = ellTerm * ellTerm - za * za;
+  if (radicand <= 0) return NaN;
+
+  const deltaL = ellTerm - Math.sqrt(radicand);
+  const N = n - deltaL;
+  if (N <= 0) return NaN;
+
+  const Etotal = mc2_eV / Math.sqrt(1 + (za * za) / (N * N));
+  return Etotal - mc2_eV;
+}
+
+// ---------------------------
+// KG corregida con Thomas
+// fórmula de estructura fina:
+// E = E_Bohr [ 1 + (Zα)^2 / n^2 * ( n/(j+1/2) - 3/4 ) ]
+// ---------------------------
+function kgCorrectedThomasEnergy(Z, n, j){
+  const Ebohr = schEnergyEV(Z, n);
+  const za = Z * alpha;
+  const corr = 1 + (za * za / (n * n)) * (n / (j + 0.5) - 3/4);
+  return Ebohr * corr;
+}
+
+function fmt(x){
+  return isFinite(x) ? x.toFixed(8) + " eV" : "nan";
+}
+function fmtSci(x){
+  return isFinite(x) ? x.toExponential(4) + " eV" : "nan";
+}
+
+function updateDisplayedValues(){
+  document.getElementById("ZVal").textContent = ZEl.value;
+  document.getElementById("nVal").textContent = nEl.value;
+  document.getElementById("lVal").textContent = lEl.value;
+  document.getElementById("jVal").textContent = jEl.value;
+}
+
+function updateLSelector(){
+  const n = parseInt(nEl.value,10);
+  const current = parseInt(lEl.value || "0",10);
+  lEl.innerHTML = "";
+  for(let l=0; l<n; l++){
+    const opt = document.createElement("option");
+    opt.value = l;
+    opt.textContent = l;
+    if (l === Math.min(current, n-1)) opt.selected = true;
+    lEl.appendChild(opt);
+  }
+}
+
+function updateJSelector(){
+  const l = parseInt(lEl.value,10);
+  const vals = allowedJValues(l);
+  const current = parseFloat(jEl.value || vals[0]);
+  jEl.innerHTML = "";
+  vals.forEach(v=>{
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    if (Math.abs(v-current) < 1e-9) opt.selected = true;
+    jEl.appendChild(opt);
+  });
+}
+
+function updateMetricsAndTable(){
+  const Z = parseInt(ZEl.value,10);
+  const n = parseInt(nEl.value,10);
+  const l = parseInt(lEl.value,10);
+  const j = parseFloat(jEl.value);
+
+  const Es = schEnergyEV(Z,n);
+  const Ekg = kgBindingEnergy(Z,n,l);
+  const Ekgc = kgCorrectedThomasEnergy(Z,n,j);
+  const Ed = diracBindingEnergy(Z,n,j);
+
+  document.getElementById("stateText").textContent =
+    `Estado seleccionado: ${stateLabel(n,l,j)}   |   Z = ${Z}`;
+
+  document.getElementById("mSch").textContent = fmt(Es);
+  document.getElementById("mKG").textContent = fmt(Ekg);
+  document.getElementById("mKGC").textContent = fmt(Ekgc);
+  document.getElementById("mDirac").textContent = fmt(Ed);
+
+  document.getElementById("mErrSch").textContent =
+    (isFinite(Es) && isFinite(Ed)) ? fmtSci(Math.abs(Es-Ed)) : "nan";
+  document.getElementById("mErrKG").textContent =
+    (isFinite(Ekg) && isFinite(Ed)) ? fmtSci(Math.abs(Ekg-Ed)) : "nan";
+  document.getElementById("mErrKGC").textContent =
+    (isFinite(Ekgc) && isFinite(Ed)) ? fmtSci(Math.abs(Ekgc-Ed)) : "nan";
+
+  const rows = [
+    ["Schrödinger", stateLabel(n,l), Es, isFinite(Ed) ? Math.abs(Es-Ed) : NaN],
+    ["Klein–Gordon", stateLabel(n,l), Ekg, isFinite(Ed) ? Math.abs(Ekg-Ed) : NaN],
+    ["KG corregida (Thomas)", stateLabel(n,l,j), Ekgc, isFinite(Ed) ? Math.abs(Ekgc-Ed) : NaN],
+    ["Dirac", stateLabel(n,l,j), Ed, 0]
+  ];
+
+  const tbody = document.querySelector("#energyTable tbody");
+  tbody.innerHTML = "";
+  rows.forEach(r=>{
+    const tr = document.createElement("tr");
+    r.forEach((cell, idx)=>{
+      const td = document.createElement("td");
+      td.textContent = idx >= 2 ? (isFinite(cell) ? cell.toExponential(8) : "nan") : cell;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+function buildLevelsPlot(){
+  const Z = parseInt(ZEl.value,10);
+  const nFocus = parseInt(nEl.value,10);
+  const lFocus = parseInt(lEl.value,10);
+  const jFocus = parseFloat(jEl.value);
+
+  const xMap = {
+    "Schrödinger": 0,
+    "KG": 1,
+    "KG corregida": 2,
+    "Dirac": 3
+  };
+
+  const xTicks = Object.keys(xMap);
+  const traces = [];
+  const annotations = [];
+  const allE = [0];
+
+  function addLevel(modelName, E, width=0.28, color="#7aa2ff"){
+    if (!isFinite(E)) return;
+    const x = xMap[modelName];
+    traces.push({
+      x: [x - width, x + width],
+      y: [E, E],
+      mode: "lines",
+      line: {width: 4, color: color},
+      hovertemplate: `${modelName}<br>${E.toFixed(8)} eV<extra></extra>`,
+      showlegend: false
+    });
+    allE.push(E);
+  }
+
+  function addArrow(modelName, E, color="#e5e7eb", text="", selected=false){
+    if (!isFinite(E)) return;
+    const x = xMap[modelName];
+    annotations.push({
+      x: x,
+      y: E,
+      ax: x,
+      ay: E + (selected ? 1.2 : 0.8),
+      xref: "x",
+      yref: "y",
+      axref: "x",
+      ayref: "y",
+      text: text,
+      showarrow: true,
+      arrowhead: 3,
+      arrowsize: selected ? 1.3 : 1.0,
+      arrowwidth: selected ? 3 : 1.8,
+      arrowcolor: color,
+      font: {
+        size: selected ? 13 : 11,
+        color: color
+      },
+      bgcolor: "rgba(0,0,0,0)"
+    });
+  }
+
+  for(let n=1; n<=5; n++){
+    const Es = schEnergyEV(Z,n);
+    addLevel("Schrödinger", Es);
+    addArrow("Schrödinger", Es);
+
+    if (lFocus < n){
+      const Ekg = kgBindingEnergy(Z,n,lFocus);
+      const Ekgc = kgCorrectedThomasEnergy(Z,n,jFocus);
+      const Ed = diracBindingEnergy(Z,n,jFocus);
+
+      addLevel("KG", Ekg);
+      addLevel("KG corregida", Ekgc);
+      addLevel("Dirac", Ed);
+
+      addArrow("KG", Ekg);
+      addArrow("KG corregida", Ekgc);
+      addArrow("Dirac", Ed);
+    }
+  }
+
+  const selectedLevels = [
+    ["Schrödinger", schEnergyEV(Z,nFocus), `n=${nFocus}`],
+    ["KG", kgBindingEnergy(Z,nFocus,lFocus), stateLabel(nFocus,lFocus)],
+    ["KG corregida", kgCorrectedThomasEnergy(Z,nFocus,jFocus), stateLabel(nFocus,lFocus,jFocus)],
+    ["Dirac", diracBindingEnergy(Z,nFocus,jFocus), stateLabel(nFocus,lFocus,jFocus)]
+  ];
+
+  selectedLevels.forEach(([model,E,label])=>{
+    addArrow(model, E, "#fca5a5", label, true);
+  });
+
+  const ymin = Math.min(...allE) - 1.0;
+  const ymax = 0.6;
+
+  const layout = {
+    title: `Niveles para Z=${Z}, l=${lFocus}, j=${jFocus}`,
+    paper_bgcolor: "#121936",
+    plot_bgcolor: "#121936",
+    font: {color:"#eef2ff"},
+    xaxis: {
+      tickmode: "array",
+      tickvals: Object.values(xMap),
+      ticktext: xTicks,
+      range: [-0.5, 3.5],
+      gridcolor: "rgba(255,255,255,0.08)",
+      zeroline: false
+    },
+    yaxis: {
+      title: "Energía ligada (eV)",
+      range: [ymin, ymax],
+      gridcolor: "rgba(255,255,255,0.08)",
+      zeroline: true,
+      zerolinecolor: "rgba(255,255,255,0.35)",
+      zerolinewidth: 1.2
+    },
+    margin: {l:70,r:30,t:60,b:60},
+    annotations: [
+      ...annotations,
+      {
+        x: 0,
+        y: 0,
+        text: "Continuo (E = 0)",
+        showarrow: false,
+        xanchor: "left",
+        yanchor: "bottom",
+        font: {size: 13, color: "#b8c1ec"}
+      }
+    ]
+  };
+
+  Plotly.newPlot("levelsPlot", traces, layout, {
+    responsive: true,
+    displayModeBar: false
+  });
+}
+
+function buildErrorPlot(){
+  const n = parseInt(nEl.value,10);
+  const l = parseInt(lEl.value,10);
+  const j = parseFloat(jEl.value);
+
+  const Zs = [];
+  const errSch = [];
+  const errKG = [];
+  const errKGC = [];
+
+  for(let Z=1; Z<=20; Z++){
+    const Ed = diracBindingEnergy(Z,n,j);
+    const Es = schEnergyEV(Z,n);
+    const Ekg = kgBindingEnergy(Z,n,l);
+    const Ekgc = kgCorrectedThomasEnergy(Z,n,j);
+
+    Zs.push(Z);
+    errSch.push(isFinite(Ed)&&isFinite(Es) ? Math.abs(Es-Ed) : null);
+    errKG.push(isFinite(Ed)&&isFinite(Ekg) ? Math.abs(Ekg-Ed) : null);
+    errKGC.push(isFinite(Ed)&&isFinite(Ekgc) ? Math.abs(Ekgc-Ed) : null);
+  }
+
+  const data = [
+    {x:Zs,y:errSch,mode:"lines+markers",name:"|Schrödinger − Dirac|"},
+    {x:Zs,y:errKG,mode:"lines+markers",name:"|KG − Dirac|"},
+    {x:Zs,y:errKGC,mode:"lines+markers",name:"|KG corregida − Dirac|"}
+  ];
+
+  const layout = {
+    paper_bgcolor:"#121936",
+    plot_bgcolor:"#121936",
+    font:{color:"#eef2ff"},
+    xaxis:{title:"Z", dtick:1, gridcolor:"rgba(255,255,255,0.08)"},
+    yaxis:{
+      title:"Error absoluto (eV)",
+      gridcolor:"rgba(255,255,255,0.08)",
+      type:"log"
+    },
+    margin:{l:70,r:20,t:20,b:60},
+    legend:{orientation:"h", y:1.14}
+  };
+
+  Plotly.newPlot("errorPlot", data, layout, {responsive:true, displayModeBar:false});
+}
+
+function refreshAll(){
+  updateDisplayedValues();
+  updateMetricsAndTable();
+  buildLevelsPlot();
+  buildErrorPlot();
+}
+
+function setupEvents(){
+  [ZEl, nEl].forEach(el=>{
+    el.addEventListener("input", ()=>{
+      if (el === nEl){
+        updateLSelector();
+        updateJSelector();
+      }
+      refreshAll();
+    });
+  });
+
+  lEl.addEventListener("change", ()=>{
+    updateJSelector();
+    refreshAll();
+  });
+
+  jEl.addEventListener("change", refreshAll);
+}
+
+updateLSelector();
+updateJSelector();
+setupEvents();
+refreshAll();
+</script>
+</body>
+</html>
