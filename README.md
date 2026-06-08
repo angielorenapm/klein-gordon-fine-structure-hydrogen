@@ -31,24 +31,215 @@ El repositorio incluye los siguientes archivos principales:
 
 ---
 
-## Contexto físico
 
-La ecuación de Klein–Gordon surge al cuantizar la relación relativista energía–momento:
+## Ecuación de Klein–Gordon para el átomo de hidrógeno
 
-[
-E^2 = p^2c^2 + m^2c^4
-]
+Para un electrón ligado a un potencial Coulombiano,
 
-Aunque esta ecuación fue un avance importante en la construcción de una mecánica cuántica relativista, presenta dificultades cuando se aplica a partículas fermiónicas como el electrón. Entre sus principales limitaciones se encuentran:
+$$
+V(r) = -\frac{Ze^2}{r},
+$$
 
-* No incorpora explícitamente el espín del electrón.
-* No reproduce correctamente la estructura fina del átomo de hidrógeno.
-* Presenta una densidad de probabilidad que no siempre es definida positiva.
-* No describe de forma completa partículas con espín semi-entero.
+la ecuación de Klein–Gordon puede escribirse como:
 
-Estas dificultades motivaron el desarrollo posterior de la ecuación de Dirac. Sin embargo, el enfoque de Ducharme permite reconsiderar la ecuación de Klein–Gordon desde una formulación escalar corregida, incorporando efectos asociados al espín sin usar directamente matrices de Dirac.
+$$
+\left[
+\nabla^2
++
+\frac{(E - V(r))^2 - m^2c^4}{\hbar^2c^2}
+\right]\psi(\vec{r}) = 0.
+$$
+
+Debido a la simetría esférica del problema, la función de onda se separa como:
+
+$$
+\psi(\vec{r}) = R(r)Y_l^m(\theta,\phi),
+$$
+
+donde (R(r)) es la función radial y (Y_l^m(\theta,\phi)) son los armónicos esféricos.
+
+La forma radial de la ecuación permite estudiar los niveles de energía del átomo de hidrógeno. Sin embargo, en la formulación estándar, los niveles dependen del número cuántico orbital (l), pero no del momento angular total (j). Esto evidencia la ausencia del espín electrónico en el modelo.
 
 ---
+
+## Corrección escalar de Ducharme
+
+El enfoque de Ducharme propone modificar la barrera centrífuga de la ecuación radial de Klein–Gordon para incorporar efectos asociados al espín. En lugar de depender únicamente del momento angular orbital, se introduce una dependencia efectiva con el momento angular total.
+
+La ecuación radial corregida puede escribirse de forma general como:
+
+$$
+\frac{d^2R}{dr^2}
++
+\frac{2}{r}\frac{dR}{dr}
++
+\left[
+\frac{\varepsilon^2 - 1}{\alpha^2}
++
+\frac{2Z\varepsilon}{r}
++
+\frac{\eta(1-\eta)}{r^2}
+\right]R(r) = 0.
+$$
+
+Aquí:
+
+$$
+\varepsilon = \frac{E}{mc^2},
+$$
+
+$$
+\eta = j+\frac{1}{2}
+--------------------
+
+\sqrt{
+\left(j+\frac{1}{2}\right)^2
+----------------------------
+
+Z^2\alpha^2
+}.
+$$
+
+En esta formulación, el término efectivo (\eta) permite introducir la dependencia con el número cuántico total (j), lo cual corrige una de las limitaciones centrales de la ecuación de Klein–Gordon estándar.
+
+---
+
+## Metodología computacional con PINNs
+
+Las **Physics-Informed Neural Networks (PINNs)** permiten resolver ecuaciones diferenciales incorporando directamente las leyes físicas dentro de la función de pérdida.
+
+En este proyecto, la red neuronal aproxima la función radial:
+
+$$
+R(r) \approx R_{\theta}(r),
+$$
+
+donde (\theta) representa los parámetros entrenables de la red neuronal.
+
+La red se entrena minimizando una función de pérdida total compuesta por diferentes términos físicos:
+
+$$
+\mathcal{L}_{total}
+===================
+
+w_{DE}\mathcal{L}*{DE}
++
+w*{BC}\mathcal{L}*{BC}
++
+w*{norm}\mathcal{L}*{norm}
++
+w_E\mathcal{L}*{E}.
+$$
+
+Cada término cumple una función específica:
+
+### Residual de la ecuación diferencial
+
+$$
+\mathcal{L}_{DE}
+================
+
+\frac{1}{N_r}
+\sum_{i=1}^{N_r}
+\left|
+\mathcal{R}(r_i)
+\right|^2,
+$$
+
+donde el residual físico está dado por:
+
+$$
+\mathcal{R}(r)
+==============
+
+\frac{d^2R_{\theta}}{dr^2}
++
+\frac{2}{r}\frac{dR_{\theta}}{dr}
++
+\left[
+\frac{\varepsilon^2 - 1}{\alpha^2}
++
+\frac{2Z\varepsilon}{r}
++
+\frac{\eta(1-\eta)}{r^2}
+\right]R_{\theta}(r).
+$$
+
+### Condiciones de frontera
+
+Se imponen condiciones físicas sobre la solución radial:
+
+$$
+R(0) = 0,
+\qquad
+R(r_{max}) = 0.
+$$
+
+El término de pérdida asociado es:
+
+$$
+\mathcal{L}_{BC}
+================
+
+|R_{\theta}(0)|^2
++
+|R_{\theta}(r_{max})|^2.
+$$
+
+### Normalización
+
+La función radial debe satisfacer la condición de normalización:
+
+$$
+\int_{0}^{r_{max}}
+|R(r)|^2 r^2 dr = 1.
+$$
+
+Por tanto, el término de normalización se define como:
+
+$$
+\mathcal{L}_{norm}
+==================
+
+\left(
+\int_{0}^{r_{max}}
+|R_{\theta}(r)|^2 r^2 dr
+------------------------
+
+1
+\right)^2.
+$$
+
+### Restricción energética
+
+Para guiar el aprendizaje del autovalor de energía, se incluye un término de pérdida energética:
+
+$$
+\mathcal{L}_{E}
+===============
+
+\left(
+E_{PINN}
+--------
+
+E_{ref}
+\right)^2.
+$$
+
+---
+
+## Estados estudiados
+
+En la implementación computacional se analizaron cuatro estados hidrogenoides relevantes para comparar la estructura fina del átomo de hidrógeno dentro del enfoque corregido de Ducharme:
+
+| Estado     | (n) | (l) |   (j) | (\kappa) | (E_{\mathrm{lig}}) (eV) |
+| ---------- | --: | --: | ----: | -------: | ----------------------: |
+| (2s_{1/2}) |   2 |   0 | (1/2) |     (-1) |           (-3.40147984) |
+| (2p_{1/2}) |   2 |   1 | (1/2) |     (+1) |           (-3.40147984) |
+| (2p_{3/2}) |   2 |   1 | (3/2) |     (-2) |           (-3.40143456) |
+| (3p_{1/2}) |   3 |   1 | (1/2) |     (+1) |           (-1.51176379) |
+
+Estos estados permiten observar la dependencia energética con el número cuántico total (j) y el parámetro relativista (\kappa). En particular, la comparación entre los estados (2p_{1/2}) y (2p_{3/2}) permite evidenciar el desdoblamiento asociado a la estructura fina, mientras que el estado (2s_{1/2}) comparte la misma energía de ligadura que (2p_{1/2}), mostrando la degeneración relativista esperada para esos niveles.
 
 ## Metodología
 
