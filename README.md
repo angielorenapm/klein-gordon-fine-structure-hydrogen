@@ -103,7 +103,6 @@ $$
 En esta formulación, el término efectivo (\eta) permite introducir la dependencia con el número cuántico total (j), lo cual corrige una de las limitaciones centrales de la ecuación de Klein–Gordon estándar.
 
 ---
-
 ## Metodología computacional con PINNs
 
 Las **Physics-Informed Neural Networks (PINNs)** permiten resolver ecuaciones diferenciales incorporando directamente las leyes físicas dentro de la función de pérdida.
@@ -111,7 +110,7 @@ Las **Physics-Informed Neural Networks (PINNs)** permiten resolver ecuaciones di
 En este proyecto, la red neuronal aproxima la función radial:
 
 $$
-R(r) \approx R_{\theta}(r),
+R(r) \approx R_{\theta}(r)
 $$
 
 donde (\theta) representa los parámetros entrenables de la red neuronal.
@@ -119,16 +118,16 @@ donde (\theta) representa los parámetros entrenables de la red neuronal.
 La red se entrena minimizando una función de pérdida total compuesta por diferentes términos físicos:
 
 $$
-\mathcal{L}_{total}
-===================
+\mathcal{L}_{\mathrm{total}}
+============================
 
-w_{DE}\mathcal{L}*{DE}
+w_{\mathrm{DE}}\mathcal{L}*{\mathrm{DE}}
 +
-w*{BC}\mathcal{L}*{BC}
+w*{\mathrm{BC}}\mathcal{L}*{\mathrm{BC}}
 +
-w*{norm}\mathcal{L}*{norm}
+w*{\mathrm{norm}}\mathcal{L}*{\mathrm{norm}}
 +
-w_E\mathcal{L}*{E}.
+w*{E}\mathcal{L}_{E}
 $$
 
 Cada término cumple una función específica:
@@ -136,14 +135,14 @@ Cada término cumple una función específica:
 ### Residual de la ecuación diferencial
 
 $$
-\mathcal{L}_{DE}
-================
+\mathcal{L}_{\mathrm{DE}}
+=========================
 
 \frac{1}{N_r}
 \sum_{i=1}^{N_r}
 \left|
 \mathcal{R}(r_i)
-\right|^2,
+\right|^2
 $$
 
 donde el residual físico está dado por:
@@ -154,7 +153,8 @@ $$
 
 \frac{d^2R_{\theta}}{dr^2}
 +
-\frac{2}{r}\frac{dR_{\theta}}{dr}
+\frac{2}{r}
+\frac{dR_{\theta}}{dr}
 +
 \left[
 \frac{\varepsilon^2 - 1}{\alpha^2}
@@ -162,7 +162,8 @@ $$
 \frac{2Z\varepsilon}{r}
 +
 \frac{\eta(1-\eta)}{r^2}
-\right]R_{\theta}(r).
+\right]
+R_{\theta}(r)
 $$
 
 ### Condiciones de frontera
@@ -170,20 +171,22 @@ $$
 Se imponen condiciones físicas sobre la solución radial:
 
 $$
-R(0) = 0,
-\qquad
-R(r_{max}) = 0.
+R(0) = 0
+$$
+
+$$
+R(r_{\max}) = 0
 $$
 
 El término de pérdida asociado es:
 
 $$
-\mathcal{L}_{BC}
-================
+\mathcal{L}_{\mathrm{BC}}
+=========================
 
 |R_{\theta}(0)|^2
 +
-|R_{\theta}(r_{max})|^2.
+|R_{\theta}(r_{\max})|^2
 $$
 
 ### Normalización
@@ -191,23 +194,26 @@ $$
 La función radial debe satisfacer la condición de normalización:
 
 $$
-\int_{0}^{r_{max}}
-|R(r)|^2 r^2 dr = 1.
+\int_{0}^{r_{\max}}
+|R(r)|^2 r^2 , dr
+=================
+
+1
 $$
 
 Por tanto, el término de normalización se define como:
 
 $$
-\mathcal{L}_{norm}
-==================
+\mathcal{L}_{\mathrm{norm}}
+===========================
 
 \left(
-\int_{0}^{r_{max}}
-|R_{\theta}(r)|^2 r^2 dr
-------------------------
+\int_{0}^{r_{\max}}
+|R_{\theta}(r)|^2 r^2 , dr
+--------------------------
 
 1
-\right)^2.
+\right)^2
 $$
 
 ### Restricción energética
@@ -219,15 +225,14 @@ $$
 ===============
 
 \left(
-E_{PINN}
---------
+E_{\mathrm{PINN}}
+-----------------
 
-E_{ref}
-\right)^2.
+E_{\mathrm{ref}}
+\right)^2
 $$
 
 ---
-
 ## Estados estudiados
 
 En la implementación computacional se analizaron cuatro estados hidrogenoides relevantes para comparar la estructura fina del átomo de hidrógeno dentro del enfoque corregido de Ducharme:
