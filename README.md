@@ -36,29 +36,29 @@ El repositorio incluye los siguientes archivos principales:
 
 Para un electrón ligado a un potencial Coulombiano,
 
-$$
+```math
 V(r) = -\frac{Ze^2}{r},
-$$
+```
 
 la ecuación de Klein–Gordon puede escribirse como:
 
-$$
+```math
 \left[
 \nabla^2
 +
 \frac{(E - V(r))^2 - m^2c^4}{\hbar^2c^2}
 \right]\psi(\vec{r}) = 0.
-$$
+```
 
 Debido a la simetría esférica del problema, la función de onda se separa como:
 
-$$
+```math
 \psi(\vec{r}) = R(r)Y_l^m(\theta,\phi),
-$$
+```
 
-donde (R(r)) es la función radial y (Y_l^m(\theta,\phi)) son los armónicos esféricos.
+donde $R(r)$ es la función radial y $Y_l^m(\theta,\phi)$ son los armónicos esféricos.
 
-La forma radial de la ecuación permite estudiar los niveles de energía del átomo de hidrógeno. Sin embargo, en la formulación estándar, los niveles dependen del número cuántico orbital (l), pero no del momento angular total (j). Esto evidencia la ausencia del espín electrónico en el modelo.
+La forma radial de la ecuación permite estudiar los niveles de energía del átomo de hidrógeno. Sin embargo, en la formulación estándar, los niveles dependen del número cuántico orbital $l$, pero no del momento angular total $j$. Esto evidencia la ausencia del espín electrónico en el modelo.
 
 ---
 
@@ -68,7 +68,7 @@ El enfoque de Ducharme propone modificar la barrera centrífuga de la ecuación 
 
 La ecuación radial corregida puede escribirse de forma general como:
 
-$$
+```math
 \frac{d^2R}{dr^2}
 +
 \frac{2}{r}\frac{dR}{dr}
@@ -80,37 +80,39 @@ $$
 +
 \frac{\eta(1-\eta)}{r^2}
 \right]R(r) = 0.
-$$
+```
 
 Aquí:
 
-$$
+```math
 \varepsilon = \frac{E}{mc^2},
-$$
+```
 
-$$
-\eta = j+\frac{1}{2}
---------------------
-
+```math
+\eta =
+j+\frac{1}{2}
+-
 \sqrt{
 \left(j+\frac{1}{2}\right)^2
-----------------------------
-
+-
 Z^2\alpha^2
 }.
-$$
+```
 
-En esta formulación, el término efectivo (\eta) permite introducir la dependencia con el número cuántico total (j), lo cual corrige una de las limitaciones centrales de la ecuación de Klein–Gordon estándar.
+En esta formulación, el término efectivo $\eta$ permite introducir la dependencia con el número cuántico total $j$, lo cual corrige una de las limitaciones centrales de la ecuación de Klein–Gordon estándar.
 
 ---
 ## Metodología computacional con PINNs
 
 Las **Physics-Informed Neural Networks (PINNs)** permiten resolver ecuaciones diferenciales incorporando directamente las leyes físicas dentro de la función de pérdida. En este proyecto, la red neuronal aproxima la función radial de la siguiente manera:
 
+```math
 R(r) \approx R_{\theta}(r)
+```
 
-donde (\theta) representa los parámetros entrenables de la red neuronal. La red se entrena minimizando una función de pérdida total compuesta por varios términos físicos:
+donde $\theta$ representa los parámetros entrenables de la red neuronal. La red se entrena minimizando una función de pérdida total compuesta por varios términos físicos:
 
+```math
 \mathcal{L}_{\mathrm{total}}
 =
 w_{\mathrm{DE}}\mathcal{L}_{\mathrm{DE}}
@@ -120,9 +122,11 @@ w_{\mathrm{BC}}\mathcal{L}_{\mathrm{BC}}
 w_{\mathrm{norm}}\mathcal{L}_{\mathrm{norm}}
 +
 w_E\mathcal{L}_E
+```
 
 El primer término corresponde al residual de la ecuación diferencial. Este término mide qué tan bien la red neuronal satisface la ecuación radial corregida en los puntos de entrenamiento:
 
+```math
 \mathcal{L}_{\mathrm{DE}}
 =
 \frac{1}{N_r}
@@ -130,9 +134,11 @@ El primer término corresponde al residual de la ecuación diferencial. Este té
 \left|
 \mathcal{R}(r_i)
 \right|^2
+```
 
 El residual físico usado durante el entrenamiento está dado por:
 
+```math
 \mathcal{R}(r)
 =
 \frac{d^2R_{\theta}}{dr^2}
@@ -148,30 +154,38 @@ El residual físico usado durante el entrenamiento está dado por:
 \frac{\eta(1-\eta)}{r^2}
 \right]
 R_{\theta}(r)
+```
 
 Además, se imponen condiciones de frontera para asegurar que la solución radial sea físicamente aceptable:
 
+```math
 R(0)=0,
 \qquad
 R(r_{\max})=0
+```
 
 El término de pérdida asociado a estas condiciones se escribe como:
 
+```math
 \mathcal{L}_{\mathrm{BC}}
 =
 |R_{\theta}(0)|^2
 +
 |R_{\theta}(r_{\max})|^2
+```
 
 También se incluye una condición de normalización para garantizar que la función radial tenga una interpretación física adecuada:
 
+```math
 \int_{0}^{r_{\max}}
 |R(r)|^2 r^2 \, dr
 =
 1
+```
 
 Por tanto, el término de pérdida de normalización se define como:
 
+```math
 \mathcal{L}_{\mathrm{norm}}
 =
 \left(
@@ -180,9 +194,11 @@ Por tanto, el término de pérdida de normalización se define como:
 -
 1
 \right)^2
+```
 
 Finalmente, para guiar el aprendizaje del autovalor de energía, se incluye una restricción energética que compara la energía aprendida por la PINN con el valor teórico de referencia:
 
+```math
 \mathcal{L}_{E}
 =
 \left(
@@ -190,20 +206,21 @@ E_{\mathrm{PINN}}
 -
 E_{\mathrm{ref}}
 \right)^2
+```
 
 ---
 ## Estados estudiados
 
 En la implementación computacional se analizaron cuatro estados hidrogenoides relevantes para comparar la estructura fina del átomo de hidrógeno dentro del enfoque corregido de Ducharme:
 
-| Estado     | (n) | (l) |   (j) | (\kappa) | (E_{\mathrm{lig}}) (eV) |
+| Estado     | $n$ | $l$ |   $j$ | $\kappa$ | $E_{\mathrm{lig}}$ (eV) |
 | ---------- | --: | --: | ----: | -------: | ----------------------: |
-| (2s_{1/2}) |   2 |   0 | (1/2) |     (-1) |           (-3.40147984) |
-| (2p_{1/2}) |   2 |   1 | (1/2) |     (+1) |           (-3.40147984) |
-| (2p_{3/2}) |   2 |   1 | (3/2) |     (-2) |           (-3.40143456) |
-| (3p_{1/2}) |   3 |   1 | (1/2) |     (+1) |           (-1.51176379) |
+| $2s_{1/2}$ |   2 |   0 | $1/2$ |     $-1$ |           $-3.40147984$ |
+| $2p_{1/2}$ |   2 |   1 | $1/2$ |     $+1$ |           $-3.40147984$ |
+| $2p_{3/2}$ |   2 |   1 | $3/2$ |     $-2$ |           $-3.40143456$ |
+| $3p_{1/2}$ |   3 |   1 | $1/2$ |     $+1$ |           $-1.51176379$ |
 
-Estos estados permiten observar la dependencia energética con el número cuántico total (j) y el parámetro relativista (\kappa). En particular, la comparación entre los estados (2p_{1/2}) y (2p_{3/2}) permite evidenciar el desdoblamiento asociado a la estructura fina, mientras que el estado (2s_{1/2}) comparte la misma energía de ligadura que (2p_{1/2}), mostrando la degeneración relativista esperada para esos niveles.
+Estos estados permiten observar la dependencia energética con el número cuántico total $j$ y el parámetro relativista $\kappa$. En particular, la comparación entre los estados $2p_{1/2}$ y $2p_{3/2}$ permite evidenciar el desdoblamiento asociado a la estructura fina, mientras que el estado $2s_{1/2}$ comparte la misma energía de ligadura que $2p_{1/2}$, mostrando la degeneración relativista esperada para esos niveles.
 
 ## Metodología
 
@@ -240,8 +257,8 @@ De esta forma, el modelo aprende soluciones físicamente consistentes para estad
 
 En la implementación computacional se analizan estados hidrogenoides relevantes para estudiar la estructura fina, tales como:
 
-* (2p_{1/2})
-* (3p_{3/2})
+* $2p_{1/2}$
+* $3p_{3/2}$
 
 Estos estados permiten observar cómo la corrección asociada al espín modifica la estructura energética y cómo la red neuronal aproxima las soluciones radiales correspondientes.
 
@@ -286,4 +303,3 @@ Bogotá, Colombia
 `PINNs`
 `Quantum mechanics`
 `Relativistic quantum mechanics`
-
