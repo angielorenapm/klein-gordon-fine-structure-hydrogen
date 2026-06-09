@@ -255,12 +255,14 @@ De esta forma, el modelo aprende soluciones físicamente consistentes para estad
 
 ## Estados estudiados
 
-En la implementación computacional se analizan estados hidrogenoides relevantes para estudiar la estructura fina, tales como:
+En la implementación computacional se analizaron cuatro estados hidrogenoides relevantes para estudiar la estructura fina:
 
+* $1s_{1/2}$
+* $2s_{1/2}$
 * $2p_{1/2}$
-* $3p_{3/2}$
+* $2p_{3/2}$
 
-Estos estados permiten observar cómo la corrección asociada al espín modifica la estructura energética y cómo la red neuronal aproxima las soluciones radiales correspondientes.
+Estos estados permiten comparar soluciones con diferente número cuántico principal, momento angular orbital y momento angular total. En particular, la inclusión de estados $s$ y $p$ permite observar cómo la corrección asociada al espín modifica la estructura energética y cómo la red neuronal aproxima las soluciones radiales correspondientes para cada caso.
 
 ---
 
@@ -274,8 +276,10 @@ El proyecto cuenta con un video explicativo en YouTube, donde se presenta el obj
 
 ## Autoras
 
-**Angie Lorena Pineda**
+
 **Ángela Sofía Malagón**
+
+**Angie Lorena Pineda**
 
 Universidad Distrital Francisco José de Caldas
 Facultad de Ciencias Matemáticas y Naturales
